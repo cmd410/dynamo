@@ -145,6 +145,33 @@ func toVariant*[T](v: T): Variant =
 
   else: {.error: "Can't convert to variant: " & $typeof(v).}
 
+func value*[T](v: Variant): T =
+  ## Get value of Variant as given type `T`.
+  ## Makes assertion of variant kind, so only
+  ## do this if you know the kind already.
+  when T is int:
+    assert v.kind == varInt
+    result = v.intValue
+  elif T is float:
+    assert v.kind == varFloat
+    result = v.floatValue
+  elif T is bool:
+    assert v.kind == varBool
+    result = v.boolValue
+  elif T is string:
+    assert v.kind == varStr
+    result = v.strValue
+  elif T is seq[Variant]:
+    assert v.kind == varList
+    result = v.listValue
+  elif T is RangeTuple:
+    assert v.kind == varRange
+    result = v.rangeValue
+  elif T is Table[string, Variant]:
+    assert v.kind == varObj
+    result = v.objValue
+  else: {.error: "Unsupported type conversion: " & $T.}
+
 template asType*(v: Variant, kind: static[VariantType], name, body: untyped): untyped =
   ## Assign value of variant to `name` and do `body`. Used to generate minimal code 
   ## for cases when variant kind is known at compile-time.
