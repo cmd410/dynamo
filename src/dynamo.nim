@@ -630,6 +630,32 @@ macro binOps*(body: untyped) =
       if sideTypeToResultExpr["right"].len > 0:
         actionStmtList.add paramBranches
 
+func isTruthy*(v: Variant): bool =
+  ## Check if variant is truthy.
+  ## Roughtly follows python convebtions.
+  ## - ints and floats are truthy if not equal to zero
+  ## - bools returned as-is
+  ## - string, list, object are truthy if theri len is > 0
+  ## - range is truthy if (end - start) > 0
+  v.everyType(x):
+    when x is int:
+      result = x != 0
+    elif x is float:
+      result = x != 0.0
+    elif x is bool:
+      result = x
+    elif x is string:
+      result = x.len > 0
+    elif x is seq[Variant]:
+      result = x.len > 0
+    elif x is RangeTuple:
+      result = (x.rEnd - x.rStart) > 0
+    elif x is Table[string, Variant]:
+      result = x.len > 0
+    else: {.error: "unsupported type: " & typeof(x).}
+  do:
+    result = false
+
 func `==`*(left: Variant, right: VariantCompatible): Variant
 func `==`*(a, b: seq[Variant]): bool =
   if a.len != b.len:
