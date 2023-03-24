@@ -16,11 +16,13 @@ runnableExamples:
   var d = {"key": @[1, 2, 3]}.toVariant
 
   # Lists can contain any kind of variants
-  l = l & n
-  l = l & i
-  l = l & f
-  l = l & (f + i)
-  l = l & b
+  l.add n
+  doAssert (nil.toVariant in l).isTruthy()
+
+  l.add i
+  l.add f
+  l.add (f + i)
+  l.add b
   echo l  # @[1, 2, 3, null, 42, 12.0, 54.0, true]
 
   # Objects too
@@ -553,8 +555,8 @@ macro binOps*(body: untyped) =
             newDotExpr(ident("DynamicTypeError"), ident("newException")),
             newCall(
               ident("&"),
-              newStrLitNode("Right operand is not suitable for this operation: "),
-              newCall(ident("$"), newDotExpr(rightVar, ident("kind")))
+              newStrLitNode("Left operand is not suitable for this operation: "),
+              newCall(ident("$"), newDotExpr(leftVar, ident("kind")))
             )
           )
         )
@@ -679,6 +681,59 @@ func `==`*(a, b: Table[string, Variant]): bool =
         if not x:
           result = false
           break
+
+proc add*(v: var Variant, other: VariantCompatible) =
+  ## Implements `add` operation for list variants
+  v.onlyTypes({ varList }, x):
+    v.listValue.add other.toVariant()
+  do:
+    raise DynamicTypeError.newException:
+      "Unimplemented operation for type: " & $v.kind
+
+proc pop*(v: var Variant): Variant =
+  ## Implements `pop` operation for list variants
+  v.onlyTypes({ varList }, x):
+    result = v.listValue.pop()
+  do:
+    raise DynamicTypeError.newException:
+      "Unimplemented operation for type: " & $v.kind
+
+proc find*(v: Variant, other: VariantCompatible): Variant =
+  ## Return index as int Variant of element if it's found inside a list variant.
+  ## If value is not in the list, returns
+  v.onlyTypes({ varList }, x):
+    result = -1.toVariant()
+    var i = 0
+    for el in x:
+      if (el == other).isTruthy():
+        return i.toVariant()
+      i.inc()
+  do:
+    raise DynamicTypeError.newException:
+      "Unimplemented operation for type: " & $v.kind
+
+proc contains*(v: Variant, other: VariantCompatible): bool =
+  ## Checks if list or object variant contains `other`.
+  ## - lists take any value of other
+  ## - objects expect a string value and checks it against keys, otherwise always false.
+  when other isnot Variant:
+    let other = other.toVariant()
+  case v.kind
+  of varList:
+    if value[int](v.find(other)) != -1:
+      result = true
+    else:
+      result = false
+  of varObj:
+    case other.kind
+    of varStr:
+      result = other.strValue in v.objValue
+    else:
+      result = false
+  else:
+    raise DynamicTypeError.newException:
+      "Unimplemented operation for type: " & $v.kind
+
 
 binOps:
   `+`:
@@ -830,6 +885,20 @@ binOps:
           x > y
         else:
           false
+
+  `in`:
+    ## Implements `in` operator for list and object variants
+    left from  [any] as x:
+      any:
+        right.contains(left)
+    right from [list, object] as y: discard
+  
+  `notin`:
+    ## Implements `notin` operator for list and object variants
+    left from  [any] as x:
+      any:
+        not right.contains(left)
+    right from [list, object] as y: discard
 
 
 func `[]=`*(container: var Variant, key: VariantCompatible, value: VariantCompatible) =
