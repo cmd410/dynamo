@@ -735,12 +735,12 @@ proc contains*(v: Variant, other: VariantCompatible): bool =
       "Unimplemented operation for type: " & $v.kind
 
 
-func `==`(a, b: Null): bool {.inline.} = true
-func `!=`(a, b: Null): bool {.inline.} = false
-func `<=`(a, b: Null): bool {.inline.} = true
-func `>=`(a, b: Null): bool {.inline.} = true
-func `<` (a, b: Null): bool {.inline.} = false
-func `>` (a, b: Null): bool {.inline.} = false
+func `==`*(a, b: Null): bool {.inline.} = true
+func `!=`*(a, b: Null): bool {.inline.} = false
+func `<=`*(a, b: Null): bool {.inline.} = true
+func `>=`*(a, b: Null): bool {.inline.} = true
+func `<`* (a, b: Null): bool {.inline.} = false
+func `>`* (a, b: Null): bool {.inline.} = false
 
 
 binOps:
@@ -824,7 +824,7 @@ binOps:
         when arr is string:
           arr & $right
         elif other is seq[Variant]:
-          arr & right
+          arr & other
         else:
           arr & @[right]
 
@@ -853,8 +853,8 @@ binOps:
   `<=`:
     ## Check if left Variant is lesser or equal to the right one.
     ## Always false when types are different.
-    left  from [any] as x: discard
-    right from [any] as y:
+    left  from [int, float, string, bool, nil] as x: discard
+    right from [int, float, string, bool, nil] as y:
       any:
         when typeof(x) is typeof(y):
           x <= y
@@ -864,8 +864,8 @@ binOps:
   `>=`:
     ## Check if left Variant is greater or equal to the right one.
     ## Always false when types are different.
-    left  from [any] as x: discard
-    right from [any] as y:
+    left  from [int, float, string, bool, nil] as x: discard
+    right from [int, float, string, bool, nil] as y:
       any:
         when typeof(x) is typeof(y):
           x >= y
@@ -875,8 +875,8 @@ binOps:
   `<`:
     ## Check if left Variant is lesser that the right one.
     ## Always false when types are different.
-    left  from [any] as x: discard
-    right from [any] as y:
+    left  from [int, float, string, bool, nil] as x: discard
+    right from [int, float, string, bool, nil] as y:
       any:
         when typeof(x) is typeof(y):
           x < y
@@ -886,8 +886,8 @@ binOps:
   `>`:
     ## Check if left Variant is greater that the right one.
     ## Always false when types are different.
-    left  from [any] as x: discard
-    right from [any] as y:
+    left  from [int, float, string, bool, nil] as x: discard
+    right from [int, float, string, bool, nil] as y:
       any:
         when typeof(x) is typeof(y):
           x > y
@@ -907,6 +907,25 @@ binOps:
       any:
         not right.contains(left)
     right from [list, object] as y: discard
+  
+  `and`:
+    left  from [bool, int] as x:
+      bool:
+        when y isnot bool:
+          x and right.isTruthy()
+        else:
+          x and y
+      int:
+        when y isnot int:
+          let y =
+            case y
+            of true: 1
+            of false: 0
+          x and y
+        else:
+          x and y
+
+    right from [bool, int] as y: discard
 
 
 func `[]=`*(container: var Variant, key: VariantCompatible, value: VariantCompatible) =
