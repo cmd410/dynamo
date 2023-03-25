@@ -10,7 +10,7 @@ runnableExamples:
   let i = 42.toVariant
   let f = 12.0.toVariant
   let b = true.toVariant
-  
+
   # Lists and objects
   var l = @[1, 2, 3].toVariant
   var d = {"key": @[1, 2, 3]}.toVariant
@@ -926,6 +926,12 @@ binOps:
           x and y
 
     right from [bool, int] as y: discard
+  
+  `..`:
+    left  from [int] as x: discard
+    right from [int] as y:
+      int:
+        x..y
 
 
 func `[]=`*(container: var Variant, key: VariantCompatible, value: VariantCompatible) =
