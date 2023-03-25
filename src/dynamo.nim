@@ -735,6 +735,14 @@ proc contains*(v: Variant, other: VariantCompatible): bool =
       "Unimplemented operation for type: " & $v.kind
 
 
+func `==`(a, b: Null): bool {.inline.} = true
+func `!=`(a, b: Null): bool {.inline.} = false
+func `<=`(a, b: Null): bool {.inline.} = true
+func `>=`(a, b: Null): bool {.inline.} = true
+func `<` (a, b: Null): bool {.inline.} = false
+func `>` (a, b: Null): bool {.inline.} = false
+
+
 binOps:
   `+`:
     ## Implements `+` operation for Variant type.
