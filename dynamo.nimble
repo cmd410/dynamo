@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.5"
+version       = "0.1.6"
 author        = "Crystal Melting Dot"
 description   = "A dynamic typing library for Nim"
 license       = "LGPL-3.0-or-later"
