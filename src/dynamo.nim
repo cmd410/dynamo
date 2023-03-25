@@ -73,7 +73,7 @@ type
     varRange = "Range"
     varObj = "Object"
 
-  RangeTuple = tuple[rStart: int, rEnd: int]
+  RangeTuple* = tuple[rStart: int, rEnd: int]
 
   Null* = object
     ## A special value
